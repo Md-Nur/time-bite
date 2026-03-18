@@ -1,6 +1,12 @@
 import React from 'react';
-import { StyleSheet, View, Text, Pressable, ViewStyle, AnimatableNumericValue } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
+import { StyleSheet, View, Text, Pressable, ViewStyle } from 'react-native';
+import Animated, { 
+  useAnimatedStyle, 
+  useSharedValue, 
+  withSpring, 
+  withTiming, 
+  withDelay 
+} from 'react-native-reanimated';
 import { Colors, BorderRadius, Spacing, Typography } from '../constants/theme';
 
 interface CardProps {
@@ -24,12 +30,12 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const scale = useSharedValue(1);
   const opacity = useSharedValue(0);
-  const translateY = useSharedValue(20);
+  const translateY = useSharedValue(30);
 
   React.useEffect(() => {
-    opacity.value = withDelay(delay, withTiming(1, { duration: 500 }));
-    translateY.value = withDelay(delay, withSpring(0));
-  }, []);
+    opacity.value = withDelay(delay, withTiming(1, { duration: 600 }));
+    translateY.value = withDelay(delay, withSpring(0, { damping: 15 }));
+  }, [delay]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { translateY: translateY.value }],
@@ -37,11 +43,11 @@ export const Card: React.FC<CardProps> = ({
   }));
 
   const onPressIn = () => {
-    scale.value = withSpring(0.95);
+    scale.value = withSpring(0.92, { damping: 10, stiffness: 100 });
   };
 
   const onPressOut = () => {
-    scale.value = withSpring(1);
+    scale.value = withSpring(1, { damping: 10, stiffness: 100 });
   };
 
   return (
@@ -64,37 +70,32 @@ export const Card: React.FC<CardProps> = ({
   );
 };
 
-// Helper for delay since reanimated's withDelay is not imported directly above correctly for version 4 usage sometimes
-function withDelay(delay: number, animation: any) {
-  'worklet';
-  return withTiming(animation.initialValue, { duration: 0 }, (finished) => {
-    if (finished) {
-       // This is a simplified version, ideally use proper withDelay
-    }
-  });
-}
-// Actually, let's use the real withDelay from reanimated if possible, but I'll fix the import if it fails.
-// Re-importing properly in the next tool if needed. For now using a standard approach.
-
 const styles = StyleSheet.create({
   card: {
-    borderRadius: BorderRadius.lg,
+    borderRadius: BorderRadius.xl, // Larger border radius for Google style
     padding: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
     aspectRatio: 1,
     shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
     marginBottom: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
   },
   iconContainer: {
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
   },
   title: {
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
+    color: Colors.text,
   },
 });

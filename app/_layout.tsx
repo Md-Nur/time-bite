@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { Colors } from '@/constants/theme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,11 +32,21 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack>
+        <Stack screenOptions={{ 
+          animation: 'slide_from_bottom',
+          headerTitleStyle: { fontWeight: '700' },
+          headerTintColor: Colors.text,
+          headerBackTitle: '',
+        }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="game" options={{ title: 'Reaction Test' }} />
+          <Stack.Screen name="puzzle" options={{ title: 'Daily Puzzle' }} />
+          <Stack.Screen name="memes" options={{ title: 'Trending Memes' }} />
+          <Stack.Screen name="facts" options={{ title: 'Fun Facts' }} />
+          <Stack.Screen name="relax" options={{ title: 'Relax Mode' }} />
           <Stack.Screen name="+not-found" />
         </Stack>
-        <StatusBar style="auto" />
+        <StatusBar style="dark" />
       </ThemeProvider>
     </GestureHandlerRootView>
   );

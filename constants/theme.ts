@@ -16,6 +16,7 @@ export const Colors = {
   cardYellow: '#FEF7E0',
   cardRed: '#FCE8E6',
   cardPink: '#FEEFC3',
+  cardPurple: '#F3E5F5',
 };
 
 export const Spacing = {
@@ -31,6 +32,7 @@ export const BorderRadius = {
   md: 16,
   lg: 24,
   xl: 32,
+  full: 9999,
 };
 
 export const Typography = {
@@ -41,6 +43,11 @@ export const Typography = {
   },
   h2: {
     fontSize: 24,
+    fontWeight: '600' as const,
+    color: Colors.text,
+  },
+  h3: {
+    fontSize: 20,
     fontWeight: '600' as const,
     color: Colors.text,
   },
