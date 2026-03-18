@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, View, Text, FlatList, Image, Pressable, Share, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
-import { Spacing, Typography } from '@/constants/theme';
+import { AppColors, Spacing, Typography } from '@/constants/theme';
 import { ChevronLeft, Share2, Heart, Download } from 'lucide-react-native';
+import { BannerAd } from '@/components/BannerAd';
 
 let AsyncStorage: any;
 try {
@@ -29,38 +30,44 @@ interface Meme {
   nsfw: boolean;
 }
 
+type MemeItem = 
+  | { type: 'meme'; data: Meme; id: string }
+  | { type: 'ad'; id: string };
+
 export default function MemeScreen() {
   const router = useRouter();
   const { height, width } = useWindowDimensions();
   
-  const [memes, setMemes] = useState<Meme[]>([]);
+  const [memes, setMemes] = useState<MemeItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [likedMemes, setLikedMemes] = useState<Record<string, boolean>>({});
+  const [savedMemes, setSavedMemes] = useState<Record<string, boolean>>({});
+  const [containerHeight, setContainerHeight] = useState(height);
   
   // Double tap tracking
   const lastTapRef = useRef<{ [key: string]: number }>({});
   
   useEffect(() => {
-    loadLikedMemes();
+    loadMemeState();
     fetchMemes();
   }, []);
 
-  const loadLikedMemes = async () => {
+  const loadMemeState = async () => {
     try {
-      const stored = await AsyncStorage.getItem('@meme_likes');
-      if (stored) {
-        setLikedMemes(JSON.parse(stored));
-      }
+      const liked = await AsyncStorage.getItem('@meme_likes');
+      const saved = await AsyncStorage.getItem('@meme_saves');
+      if (liked) setLikedMemes(JSON.parse(liked));
+      if (saved) setSavedMemes(JSON.parse(saved));
     } catch (e) {
-      console.error('Failed to load likes', e);
+      console.error('Failed to load meme state', e);
     }
   };
 
-  const saveLikeStatus = async (likes: Record<string, boolean>) => {
+  const saveMemeState = async (key: string, data: Record<string, boolean>) => {
     try {
-      await AsyncStorage.setItem('@meme_likes', JSON.stringify(likes));
+      await AsyncStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
-      console.error('Failed to save likes', e);
+      console.error('Failed to save meme state', e);
     }
   };
 
@@ -74,7 +81,18 @@ export default function MemeScreen() {
       if (data && data.memes) {
         // filter out nsfw for safety (optional but good practice)
         const safeMemes = data.memes.filter((m: Meme) => !m.nsfw);
-        setMemes(prev => [...prev, ...safeMemes]);
+        
+        // Transform and insert Ads every 5 items
+        const newItems: MemeItem[] = [];
+        safeMemes.forEach((m: Meme, index: number) => {
+          newItems.push({ type: 'meme', data: m, id: m.url + index + Date.now() });
+          // Insert ad every 5 items
+          if ((memes.length + newItems.length) % 6 === 0) {
+            newItems.push({ type: 'ad', id: `ad-${Date.now()}-${index}` });
+          }
+        });
+        
+        setMemes(prev => [...prev, ...newItems]);
       }
     } catch (error) {
       console.error('Error fetching memes', error);
@@ -86,7 +104,15 @@ export default function MemeScreen() {
   const toggleLike = (url: string) => {
     setLikedMemes(prev => {
       const next = { ...prev, [url]: !prev[url] };
-      saveLikeStatus(next);
+      saveMemeState('@meme_likes', next);
+      return next;
+    });
+  };
+
+  const toggleSave = (url: string) => {
+    setSavedMemes(prev => {
+      const next = { ...prev, [url]: !prev[url] };
+      saveMemeState('@meme_saves', next);
       return next;
     });
   };
@@ -114,57 +140,56 @@ export default function MemeScreen() {
     }
   };
 
-  const handleSave = async (meme: Meme) => {
-    // Basic "Save" -> mark as liked to be viewed later
-    // Real save would use expo-media-library to download the image
-    toggleLike(meme.url);
+  const handleSave = (meme: Meme) => {
+    toggleSave(meme.url);
   };
 
-  // Viewability setup to track user swipes for our Ad Strategy
-  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
-  
-  const onViewableItemsChanged = useCallback(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      const currentIndex = viewableItems[0].index;
-      
-      // Ad Strategy log: Trigger every 5 swipes
-      if (currentIndex > 0 && currentIndex % 5 === 0) {
-        // Here we trigger the AdMob intersitital.
-        // As per the plan, we are mocking the interaction to avoid build errors in Expo Go
-        console.log(`[AdMob Mock] Showing Interstitial Ad after ${currentIndex} swipes`);
-      }
+  const renderItem = ({ item }: { item: MemeItem }) => {
+    if (item.type === 'ad') {
+      return (
+        <View style={[styles.memeContainer, { width, height: containerHeight, justifyContent: 'center', backgroundColor: AppColors.cardBlue }]}>
+           <View style={{ alignItems: 'center', padding: Spacing.xl }}>
+             <Text style={[Typography.h2, { color: AppColors.primary, marginBottom: Spacing.sm }]}>Sponsored</Text>
+             <Text style={[Typography.body, { textAlign: 'center', color: AppColors.textSecondary, marginBottom: Spacing.xl }]}>
+               Enjoying TimeBite? Check out our partners!
+             </Text>
+             <BannerAd />
+             <Text style={[Typography.caption, { marginTop: Spacing.xl, color: AppColors.textSecondary }]}>Swipe to continue laughing</Text>
+           </View>
+        </View>
+      );
     }
-  }, []);
 
-  const renderItem = ({ item }: { item: Meme }) => {
-    const isLiked = likedMemes[item.url];
+    const meme = item.data;
+    const isLiked = likedMemes[meme.url];
+    const isSaved = savedMemes[meme.url];
 
     return (
-      <Pressable onPress={() => handleDoubleTap(item)} style={[styles.memeContainer, { width, height }]}>
+      <Pressable onPress={() => handleDoubleTap(meme)} style={[styles.memeContainer, { width, height: containerHeight }]}>
         <Image 
-          source={{ uri: item.url }} 
+          source={{ uri: meme.url }} 
           style={styles.image} 
           resizeMode="contain"
         />
         <View style={styles.overlay}>
           <View style={styles.bottomContent}>
             <View style={styles.textContainer}>
-              <Text style={styles.memeTitle} numberOfLines={3}>{item.title}</Text>
-              <Text style={styles.authorText}>by u/{item.author}</Text>
+              <Text style={styles.memeTitle} numberOfLines={3}>{meme.title}</Text>
+              <Text style={styles.authorText}>by u/{meme.author}</Text>
             </View>
             <View style={styles.actions}>
-              <Pressable style={styles.actionItem} onPress={() => toggleLike(item.url)}>
-                <Heart size={36} color={isLiked ? "#ff2b54" : "white"} fill={isLiked ? "#ff2b54" : "transparent"} />
-                <Text style={styles.actionText}>{item.ups + (isLiked ? 1 : 0)}</Text>
+              <Pressable style={styles.actionItem} onPress={() => toggleLike(meme.url)}>
+                <Heart size={36} color={isLiked ? "#ff2b54" : AppColors.text} fill={isLiked ? "#ff2b54" : "transparent"} />
+                <Text style={[styles.actionText, isLiked && { color: "#ff2b54" }]}>{meme.ups + (isLiked ? 1 : 0)}</Text>
               </Pressable>
               
-              <Pressable style={styles.actionItem} onPress={() => handleSave(item)}>
-                <Download size={32} color="white" />
-                <Text style={styles.actionText}>Save</Text>
+              <Pressable style={styles.actionItem} onPress={() => handleSave(meme)}>
+                <Download size={32} color={isSaved ? AppColors.primary : AppColors.text} />
+                <Text style={[styles.actionText, isSaved && { color: AppColors.primary }]}>{isSaved ? 'Saved' : 'Save'}</Text>
               </Pressable>
 
-              <Pressable style={styles.actionItem} onPress={() => handleShare(item)}>
-                <Share2 size={32} color="white" />
+              <Pressable style={styles.actionItem} onPress={() => handleShare(meme)}>
+                <Share2 size={32} color={AppColors.text} />
                 <Text style={styles.actionText}>Share</Text>
               </Pressable>
             </View>
@@ -174,20 +199,29 @@ export default function MemeScreen() {
     );
   };
 
+
   return (
-    <View style={styles.container}>
+    <View 
+      style={styles.container} 
+      onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
+    >
       <Stack.Screen 
         options={{ 
           headerShown: true,
-          headerTransparent: true,
+          headerTransparent: false,
+          headerStyle: { backgroundColor: AppColors.background },
+          headerShadowVisible: false,
           title: '',
           headerLeft: () => (
-            <Pressable 
-              onPress={() => router.back()} 
-              style={styles.backButton}
-            >
-              <ChevronLeft color="white" size={24} />
-            </Pressable>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Pressable 
+                onPress={() => router.back()} 
+                style={styles.backButton}
+              >
+                <ChevronLeft color={AppColors.text} size={24} />
+              </Pressable>
+              <Text style={[Typography.h3, { marginLeft: Spacing.sm, color: AppColors.text }]}>Memes</Text>
+            </View>
           ),
         }} 
       />
@@ -195,7 +229,7 @@ export default function MemeScreen() {
       {memes.length > 0 ? (
         <FlatList
           data={memes}
-          keyExtractor={(item, index) => item.url + index}
+          keyExtractor={(item) => item.id}
           renderItem={renderItem}
           pagingEnabled
           showsVerticalScrollIndicator={false}
@@ -203,18 +237,16 @@ export default function MemeScreen() {
           decelerationRate="fast"
           onEndReached={fetchMemes}
           onEndReachedThreshold={1}
-          onViewableItemsChanged={onViewableItemsChanged}
-          viewabilityConfig={viewabilityConfig}
           ListFooterComponent={
             loading ? (
-              <View style={[styles.loaderContainer, { width, height }]}>
-                <ActivityIndicator size="large" color="white" />
+              <View style={[styles.loaderContainer, { width, height: containerHeight }]}>
+                <ActivityIndicator size="large" color={AppColors.text} />
               </View>
             ) : null
           }
         />
       ) : (
-        <View style={[styles.loadingCenter, { width, height }]}>
+        <View style={[styles.loadingCenter, { width, height: containerHeight }]}>
            <ActivityIndicator size="large" color="#ff2b54" />
            <Text style={styles.loadingText}>Loading Memes...</Text>
         </View>
@@ -226,16 +258,16 @@ export default function MemeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.background,
   },
   loadingCenter: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.background,
   },
   loadingText: {
     ...Typography.body,
-    color: '#aaa',
+    color: AppColors.textSecondary,
     marginTop: Spacing.md,
   },
   loaderContainer: {
@@ -243,7 +275,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   backButton: {
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: AppColors.cardBlue,
     borderRadius: 20,
     width: 40,
     height: 40,
@@ -254,7 +286,7 @@ const styles = StyleSheet.create({
   memeContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#050505',
+    backgroundColor: AppColors.surface,
     position: 'relative'
   },
   image: {
@@ -267,8 +299,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: Spacing.xl,
-    paddingBottom: 100, // Safe space for bottom navigation
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingBottom: 100, // Pulled up for better visibility
   },
   bottomContent: {
     flexDirection: 'row',
@@ -280,17 +311,14 @@ const styles = StyleSheet.create({
     marginRight: Spacing.xl,
   },
   memeTitle: {
-    ...Typography.h3,
+    ...Typography.h2,
     fontWeight: '700',
-    color: 'white',
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: -1, height: 1 },
-    textShadowRadius: 10,
+    color: AppColors.text,
     marginBottom: Spacing.xs,
   },
   authorText: {
-    color: 'rgba(255,255,255,0.85)',
-    fontSize: 14,
+    ...Typography.caption,
+    color: AppColors.textSecondary,
     fontWeight: '500',
   },
   actions: {
@@ -301,7 +329,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionText: {
-    color: 'white',
+    color: AppColors.text,
     fontSize: 13,
     marginTop: Spacing.xs,
     fontWeight: '600',

@@ -1,93 +1,138 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Text, Pressable, Dimensions, ScrollView } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import Animated, { 
-  useSharedValue, 
-  useAnimatedStyle, 
-  withRepeat, 
-  withTiming, 
-  withSequence,
-  Easing,
-  interpolateColor
+  FadeIn, 
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  Layout
 } from 'react-native-reanimated';
-import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
-import { ChevronLeft, Wind, Moon, Sun } from 'lucide-react-native';
+import { AppColors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import { ChevronLeft, Wind, Moon, Sun, Sparkles, Droplets, Palette, CircleDashed } from 'lucide-react-native';
+import { BannerAd } from '@/components/BannerAd';
+import { useInterstitialAd } from '@/constants/useAds';
+import * as Haptics from 'expo-haptics';
+
+// Activity Components
+import { BubblePop } from '../components/ZenZone/BubblePop';
+import { ParticleFlow } from '../components/ZenZone/ParticleFlow';
+import { Breathing } from '../components/ZenZone/Breathing';
+import { RippleEffect } from '../components/ZenZone/RippleEffect';
+import { ColorFill } from '../components/ZenZone/ColorFill';
+
+const { width } = Dimensions.get('window');
+const COLUMN_WIDTH = (width - Spacing.md * 3) / 2;
+
+type ActivityType = 'menu' | 'bubble' | 'particle' | 'breathing' | 'ripple' | 'color';
+
+interface ActivityItem {
+  id: ActivityType;
+  title: string;
+  icon: React.ReactNode;
+  color: string;
+}
+
+const ACTIVITIES: ActivityItem[] = [
+  { id: 'bubble', title: 'Bubble Pop', icon: <Sparkles size={32} color="#4FC3F7" />, color: '#E1F5FE' },
+  { id: 'particle', title: 'Particle Flow', icon: <Sparkles size={32} color="#9575CD" />, color: '#EDE7F6' },
+  { id: 'breathing', title: 'Breathing', icon: <Wind size={32} color="#4DB6AC" />, color: '#E0F2F1' },
+  { id: 'ripple', title: 'Wave Touch', icon: <Droplets size={32} color="#64B5F6" />, color: '#E3F2FD' },
+  { id: 'color', title: 'Color Fill', icon: <Palette size={32} color="#F06292" />, color: '#FCE4EC' },
+  { id: 'menu', title: 'More Coming', icon: <CircleDashed size={32} color="#BDBDBD" />, color: '#F5F5F5' },
+];
 
 export default function RelaxScreen() {
   const router = useRouter();
-  const [phase, setPhase] = useState<'Inhale' | 'Exhale' | 'Hold'>('Inhale');
-  const scale = useSharedValue(1);
-  const colorProgress = useSharedValue(0);
+  const [activeActivity, setActiveActivity] = useState<ActivityType>('menu');
+  const [sessionSwitches, setSessionSwitches] = useState(0);
+  const { show: showInterstitial, loaded: interstitialLoaded } = useInterstitialAd();
 
-  useEffect(() => {
-    // Breathing cycle: 4s inhale, 4s hold, 4s exhale
-    const startBreathing = () => {
-      setPhase('Inhale');
-      scale.value = withTiming(1.5, { duration: 4000, easing: Easing.inOut(Easing.ease) });
-      colorProgress.value = withTiming(1, { duration: 4000 });
+  const handleSelectActivity = (id: ActivityType) => {
+    if (id === 'menu') return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Show interstitial every 2 switches
+    const newCount = sessionSwitches + 1;
+    setSessionSwitches(newCount);
+    
+    if (newCount % 2 === 0 && interstitialLoaded) {
+      showInterstitial();
+    }
+    
+    setActiveActivity(id);
+  };
 
-      setTimeout(() => {
-        setPhase('Hold');
-        setTimeout(() => {
-          setPhase('Exhale');
-          scale.value = withTiming(1, { duration: 4000, easing: Easing.inOut(Easing.ease) });
-          colorProgress.value = withTiming(0, { duration: 4000 });
-        }, 4000);
-      }, 4000);
-    };
+  const renderActivity = () => {
+    switch (activeActivity) {
+      case 'bubble':
+        return <BubblePop onBack={() => setActiveActivity('menu')} />;
+      case 'particle':
+        return <ParticleFlow onBack={() => setActiveActivity('menu')} />;
+      case 'breathing':
+        return <Breathing onBack={() => setActiveActivity('menu')} />;
+      case 'ripple':
+        return <RippleEffect onBack={() => setActiveActivity('menu')} />;
+      case 'color':
+        return <ColorFill onBack={() => setActiveActivity('menu')} />;
+      default:
+        return null;
+    }
+  };
 
-    startBreathing();
-    const interval = setInterval(startBreathing, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    const backgroundColor = interpolateColor(
-      colorProgress.value,
-      [0, 1],
-      ['#E0F7FA', '#B2EBF2']
+  if (activeActivity !== 'menu') {
+    return (
+      <View style={styles.container}>
+        <Stack.Screen options={{ headerShown: false }} />
+        {renderActivity()}
+      </View>
     );
-    return {
-      transform: [{ scale: scale.value }],
-      backgroundColor,
-    };
-  });
+  }
 
   return (
     <View style={styles.container}>
       <Stack.Screen 
         options={{ 
-          title: 'Relax Mode',
+          title: 'Zen Zone',
           headerShown: true,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ paddingLeft: Spacing.md }}>
-              <ChevronLeft color={Colors.text} size={24} />
+              <ChevronLeft color={AppColors.text} size={24} />
             </Pressable>
           ),
-          headerStyle: { backgroundColor: Colors.background },
+          headerStyle: { backgroundColor: AppColors.background },
           headerShadowVisible: false,
         }} 
       />
 
-      <View style={styles.content}>
-        <View style={styles.headerInfo}>
-          <Moon size={24} color={Colors.primary} />
-          <Text style={styles.headerText}>Take a moment to breathe.</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.subtitle}>Tap. Relax. Breathe.</Text>
         </View>
 
-        <View style={styles.breathingContainer}>
-          <Animated.View style={[styles.circle, animatedStyle]} />
-          <Animated.View style={[styles.outerCircle, { opacity: 0.3 }]} />
-          <View style={styles.textOverlay}>
-            <Text style={styles.phaseText}>{phase}</Text>
-          </View>
+        <View style={styles.grid}>
+          {ACTIVITIES.map((activity) => (
+            <Animated.View 
+              key={activity.id} 
+              entering={FadeIn.delay(100)}
+              layout={Layout.springify()}
+            >
+              <Pressable 
+                onPress={() => handleSelectActivity(activity.id)}
+                style={({ pressed }) => [
+                  styles.card,
+                  { backgroundColor: activity.color, transform: [{ scale: pressed ? 0.98 : 1 }] }
+                ]}
+              >
+                {activity.icon}
+                <Text style={styles.cardTitle}>{activity.title}</Text>
+              </Pressable>
+            </Animated.View>
+          ))}
         </View>
-
-        <View style={styles.footer}>
-          <Wind size={20} color={Colors.textSecondary} />
-          <Text style={styles.instructionText}>Follow the circle's rhythm</Text>
-        </View>
-      </View>
+      </ScrollView>
+      <BannerAd />
     </View>
   );
 }
@@ -95,59 +140,45 @@ export default function RelaxScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: AppColors.background,
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xl * 2,
+  },
+  header: {
+    marginBottom: Spacing.xl,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.xl * 2,
   },
-  headerInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  headerText: {
-    ...Typography.h2,
-    color: Colors.textSecondary,
-    fontWeight: '400',
-  },
-  breathingContainer: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 200,
-    height: 200,
-  },
-  circle: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    position: 'absolute',
-  },
-  outerCircle: {
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    position: 'absolute',
-  },
-  textOverlay: {
-    position: 'absolute',
-  },
-  phaseText: {
-    ...Typography.h1,
-    color: Colors.primary,
-    letterSpacing: 1,
-  },
-  footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-  },
-  instructionText: {
+  subtitle: {
     ...Typography.body,
-    color: Colors.textSecondary,
+    color: AppColors.textSecondary,
+    fontSize: 18,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: COLUMN_WIDTH,
+    height: COLUMN_WIDTH,
+    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.md,
+    gap: Spacing.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  cardTitle: {
+    ...Typography.h3,
+    fontSize: 16,
+    color: AppColors.text,
+    textAlign: 'center',
   },
 });

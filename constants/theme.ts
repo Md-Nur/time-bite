@@ -1,4 +1,4 @@
-export const Colors = {
+export const AppColors = {
   primary: '#1A73E8', // Google Blue
   secondary: '#34A853', // Google Green
   accent: '#FBBC05', // Google Yellow
@@ -39,24 +39,24 @@ export const Typography = {
   h1: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: Colors.text,
+    color: AppColors.text,
   },
   h2: {
     fontSize: 24,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: AppColors.text,
   },
   h3: {
     fontSize: 20,
     fontWeight: '600' as const,
-    color: Colors.text,
+    color: AppColors.text,
   },
   body: {
     fontSize: 16,
-    color: Colors.text,
+    color: AppColors.text,
   },
   caption: {
     fontSize: 14,
-    color: Colors.textSecondary,
+    color: AppColors.textSecondary,
   },
 };

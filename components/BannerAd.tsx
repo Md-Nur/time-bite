@@ -1,38 +1,34 @@
 import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
-import { Colors, Spacing, Typography, BorderRadius } from '../constants/theme';
+import { StyleSheet, View } from 'react-native';
+import { BannerAd as GAMBannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import { AppColors, Spacing } from '../constants/theme';
+import { AD_IDS } from '../constants/Ads';
 
 export const BannerAd = () => {
   return (
     <View style={styles.container}>
-      <View style={styles.adBox}>
-        <Text style={styles.adText}>BANNER AD PLACEHOLDER</Text>
-      </View>
+      <GAMBannerAd
+        unitId={AD_IDS.BANNER}
+        size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        requestOptions={{
+          requestNonPersonalizedAdsOnly: true,
+        }}
+        onAdFailedToLoad={(error) => {
+          console.error('Banner ad failed to load: ', error);
+        }}
+      />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: Spacing.md,
-    backgroundColor: Colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  adBox: {
-    height: 50,
-    backgroundColor: '#E0E0E0',
-    borderRadius: BorderRadius.sm,
+    paddingVertical: Spacing.xs,
+    backgroundColor: AppColors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 1,
-    borderColor: '#9E9E9E',
-  },
-  adText: {
-    ...Typography.caption,
-    fontSize: 10,
-    letterSpacing: 1.5,
-    fontWeight: 'bold',
+    borderTopWidth: 1,
+    borderTopColor: AppColors.border,
+    minHeight: 60,
   },
 });

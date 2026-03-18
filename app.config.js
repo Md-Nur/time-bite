@@ -1,0 +1,58 @@
+export default {
+  expo: {
+    name: "time-bite",
+    slug: "time-bite",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.png",
+    scheme: "timebite",
+    userInterfaceStyle: "automatic",
+    splash: {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    ios: {
+      supportsTablet: true,
+      bundleIdentifier: "com.nur-manik.timebite",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false
+      }
+    },
+    android: {
+      adaptiveIcon: {
+        backgroundColor: "#E6F4FE",
+        foregroundImage: "./assets/images/android-icon-foreground.png",
+        backgroundImage: "./assets/images/android-icon-background.png",
+        monochromeImage: "./assets/images/android-icon-monochrome.png"
+      },
+      predictiveBackGestureEnabled: false,
+      package: "com.nur_manik.timebite",
+      versionCode: 4
+    },
+    web: {
+      bundler: "metro",
+      output: "static",
+      favicon: "./assets/images/favicon.png"
+    },
+    plugins: [
+      "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          androidAppId: process.env.EXPO_PUBLIC_AD_APP_ID_ANDROID?.trim(),
+          iosAppId: process.env.EXPO_PUBLIC_AD_APP_ID_IOS?.trim()
+        }
+      ]
+    ],
+    experiments: {
+      typedRoutes: true
+    },
+    extra: {
+      router: {},
+      eas: {
+        projectId: "8e3db260-6415-4c19-9749-511853106db2"
+      }
+    }
+  }
+};

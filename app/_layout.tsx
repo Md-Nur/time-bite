@@ -8,7 +8,7 @@ import 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
-import { Colors } from '@/constants/theme';
+import { AppColors } from '@/constants/theme';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -35,15 +35,15 @@ export default function RootLayout() {
         <Stack screenOptions={{ 
           animation: 'slide_from_bottom',
           headerTitleStyle: { fontWeight: '700' },
-          headerTintColor: Colors.text,
+          headerTintColor: AppColors.text,
           headerBackTitle: '',
         }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="game" options={{ title: 'Reaction Test' }} />
-          <Stack.Screen name="puzzle" options={{ title: 'Daily Puzzle' }} />
-          <Stack.Screen name="memes" options={{ title: 'Trending Memes' }} />
-          <Stack.Screen name="facts" options={{ title: 'Fun Facts' }} />
-          <Stack.Screen name="relax" options={{ title: 'Relax Mode' }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="game" options={{ title: 'Action Quest' }} />
+          <Stack.Screen name="puzzle" options={{ title: 'Brain Teaser' }} />
+          <Stack.Screen name="memes" options={{ title: 'Laugh Lounge' }} />
+          <Stack.Screen name="factbite" options={{ title: 'Curiosity Bites' }} />
+          <Stack.Screen name="relax" options={{ title: 'Zen Zone' }} />
           <Stack.Screen name="+not-found" />
         </Stack>
         <StatusBar style="dark" />

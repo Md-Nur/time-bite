@@ -2,47 +2,56 @@ import { StyleSheet, View, Text, ScrollView, FlatList, Pressable, Platform, Stat
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Gamepad2, Puzzle, Laugh, Sparkles, Coffee, Award } from 'lucide-react-native';
-import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import { AppColors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { Card } from '@/components/Card';
+import { BannerAd } from '@/components/BannerAd';
 
-export default function TabOneScreen() {
+export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'Good morning';
+    if (hour >= 12 && hour < 17) return 'Good afternoon';
+    if (hour >= 17 && hour < 21) return 'Good evening';
+    return 'Hello';
+  };
+
   const activities = [
     { 
       id: '1', 
-      title: 'Play Game', 
-      icon: <Gamepad2 size={32} color={Colors.primary} />, 
-      color: Colors.cardBlue,
+      title: 'Action Quest', 
+      icon: <Gamepad2 size={32} color={AppColors.primary} />, 
+      color: AppColors.cardBlue,
       onPress: () => router.push('/game')
     },
     { 
       id: '2', 
-      title: 'Daily Puzzle', 
-      icon: <Puzzle size={32} color={Colors.secondary} />, 
-      color: Colors.cardGreen,
+      title: 'Brain Teaser', 
+      icon: <Puzzle size={32} color={AppColors.secondary} />, 
+      color: AppColors.cardGreen,
       onPress: () => router.push('/puzzle')
     },
     { 
       id: '3', 
-      title: 'Memes', 
-      icon: <Laugh size={32} color={Colors.accent} />, 
-      color: Colors.cardYellow,
+      title: 'Laugh Lounge', 
+      icon: <Laugh size={32} color={AppColors.accent} />, 
+      color: AppColors.cardYellow,
       onPress: () => router.push('/memes')
     },
     { 
       id: '4', 
-      title: 'FactBite', 
-      icon: <Sparkles size={32} color={Colors.error} />, 
-      color: Colors.cardRed,
-      onPress: () => router.push('/facts')
+      title: 'Curiosity Bites', 
+      icon: <Sparkles size={32} color={AppColors.error} />, 
+      color: AppColors.cardRed,
+      onPress: () => router.push('/factbite')
     },
     { 
       id: '5', 
-      title: 'Relax Mode', 
+      title: 'Zen Zone', 
       icon: <Coffee size={32} color="#E91E63" />, 
-      color: Colors.cardPink,
+      color: AppColors.cardPink,
       onPress: () => router.push('/relax')
     },
   ];
@@ -50,12 +59,8 @@ export default function TabOneScreen() {
   const renderHeader = () => (
     <View style={styles.header}>
       <View>
-        <Text style={Typography.caption}>Pick a Bite of Fun,</Text>
-        <Text style={Typography.h1}>Guest User 👋</Text>
-      </View>
-      <View style={styles.levelBadge}>
-        <Award size={16} color={Colors.accent} />
-        <Text style={styles.levelText}>Lv. 5</Text>
+        <Text style={Typography.caption}>Ready for a quick adventure?</Text>
+        <Text style={Typography.h1}>{getGreeting()}, Explorer 👋</Text>
       </View>
     </View>
   );
@@ -76,10 +81,14 @@ export default function TabOneScreen() {
             backgroundColor={item.color}
             onPress={item.onPress}
             delay={index * 100}
-            style={styles.card}
+            style={[
+              styles.card,
+              item.id === '5' && styles.cardZen,
+            ]}
           />
         )}
       />
+      <BannerAd />
     </View>
   );
 }
@@ -87,7 +96,7 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: AppColors.background,
   },
   listContent: {
     padding: Spacing.lg,
@@ -101,18 +110,18 @@ const styles = StyleSheet.create({
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: AppColors.surface,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
     borderRadius: BorderRadius.sm,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: AppColors.border,
   },
   levelText: {
     ...Typography.caption,
     fontWeight: '700',
     marginLeft: Spacing.xs,
-    color: Colors.text,
+    color: AppColors.text,
   },
   columnWrapper: {
     justifyContent: 'space-between',
@@ -120,7 +129,8 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    // The Card component in components/Card.tsx uses aspectRatio: 1,
-    // so it will be square. We just need to manage the grid spacing.
+  },
+  cardZen: {
+    aspectRatio: 1.8,
   },
 });

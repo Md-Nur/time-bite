@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, Pressable, ViewStyle } from 'react-native';
+import { StyleSheet, View, Text, Pressable, ViewStyle, StyleProp } from 'react-native';
 import Animated, { 
   useAnimatedStyle, 
   useSharedValue, 
@@ -7,13 +7,13 @@ import Animated, {
   withTiming, 
   withDelay 
 } from 'react-native-reanimated';
-import { Colors, BorderRadius, Spacing, Typography } from '../constants/theme';
+import { AppColors, BorderRadius, Spacing, Typography } from '../constants/theme';
 
 interface CardProps {
   title: string;
   icon?: React.ReactNode;
   onPress: () => void;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   backgroundColor?: string;
   delay?: number;
 }
@@ -25,7 +25,7 @@ export const Card: React.FC<CardProps> = ({
   icon, 
   onPress, 
   style, 
-  backgroundColor = Colors.surface,
+  backgroundColor = AppColors.surface,
   delay = 0 
 }) => {
   const scale = useSharedValue(1);
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     aspectRatio: 1,
-    shadowColor: Colors.shadow,
+    shadowColor: AppColors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -96,6 +96,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     textAlign: 'center',
-    color: Colors.text,
+    color: AppColors.text,
   },
 });

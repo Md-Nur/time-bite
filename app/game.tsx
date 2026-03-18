@@ -7,14 +7,16 @@ import Animated, {
   withSequence, 
   withSpring 
 } from 'react-native-reanimated';
-import { Colors, Spacing, Typography, BorderRadius } from '@/constants/theme';
+import { AppColors, Spacing, Typography, BorderRadius } from '@/constants/theme';
 import { ChevronLeft, Timer, Play, Pause, RotateCcw, Award } from 'lucide-react-native';
 import { BannerAd } from '@/components/BannerAd';
+import { useInterstitialAd } from '@/constants/useAds';
 
-const TAP_COLORS = [Colors.primary, Colors.secondary, Colors.accent, Colors.error, '#9C27B0', '#00BCD4'];
+const TAP_COLORS = [AppColors.primary, AppColors.secondary, AppColors.accent, AppColors.error, '#9C27B0', '#00BCD4'];
 
 export default function GameScreen() {
   const router = useRouter();
+  const { show: showInterstitial, loaded: interstitialLoaded } = useInterstitialAd();
   const [gameState, setGameState] = useState<'start' | 'playing' | 'paused' | 'result'>('start');
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -59,11 +61,9 @@ export default function GameScreen() {
     setRoundsPlayed(newRounds);
     
     // Interstitial Ad Trigger every 3 rounds
-    if (newRounds % 3 === 0) {
+    if (newRounds % 3 === 0 && interstitialLoaded) {
       setTimeout(() => {
-        Alert.alert('Interstitial Ad', 'Pretend a full-screen banner is playing right now!', [
-          { text: 'Close Ad' }
-        ]);
+        showInterstitial();
       }, 500); // Small delay to let result screen render
     }
   };
@@ -93,14 +93,14 @@ export default function GameScreen() {
     <View style={styles.container}>
       <Stack.Screen 
         options={{ 
-          title: 'TapRush',
+          title: 'Action Quest',
           headerShown: true,
           headerLeft: () => (
             <Pressable onPress={() => router.back()} style={{ paddingLeft: Spacing.md }}>
-              <ChevronLeft color={Colors.text} size={24} />
+              <ChevronLeft color={AppColors.text} size={24} />
             </Pressable>
           ),
-          headerStyle: { backgroundColor: Colors.background },
+          headerStyle: { backgroundColor: AppColors.background },
           headerShadowVisible: false,
         }} 
       />
@@ -116,19 +116,19 @@ export default function GameScreen() {
             </View>
             
             <View style={styles.timerContainer}>
-              <Timer size={24} color={timeLeft <= 5 ? Colors.error : Colors.primary} />
-              <Text style={[styles.timerValue, timeLeft <= 5 && { color: Colors.error }]}>
+              <Timer size={24} color={timeLeft <= 5 ? AppColors.error : AppColors.primary} />
+              <Text style={[styles.timerValue, timeLeft <= 5 && { color: AppColors.error }]}>
                 {timeLeft}s
               </Text>
             </View>
 
             {gameState === 'playing' ? (
               <Pressable onPress={pauseGame} style={styles.iconButton}>
-                <Pause size={24} color={Colors.text} />
+                <Pause size={24} color={AppColors.text} />
               </Pressable>
             ) : gameState === 'paused' ? (
               <Pressable onPress={resumeGame} style={styles.iconButton}>
-                <Play size={24} color={Colors.text} />
+                <Play size={24} color={AppColors.text} />
               </Pressable>
             ) : (
               <View style={styles.iconSpacer} />
@@ -139,13 +139,13 @@ export default function GameScreen() {
         {/* START SCREEN */}
         {gameState === 'start' && (
           <View style={styles.centerSection}>
-            <Text style={styles.gameTitle}>TapRush</Text>
-            <Text style={styles.gameSubtitle}>Tap as fast as you can before time runs out!</Text>
+            <Text style={styles.gameTitle}>Action Quest</Text>
+            <Text style={styles.gameSubtitle}>Test your reflexes! Tap as fast as you can before time runs out.</Text>
             <Pressable style={styles.primaryButton} onPress={startGame}>
               <Text style={styles.primaryButtonText}>Start Game</Text>
             </Pressable>
             <View style={styles.highScoreBox}>
-              <Award size={20} color={Colors.accent} />
+              <Award size={20} color={AppColors.accent} />
               <Text style={styles.highScoreText}>High Score: {highScore}</Text>
             </View>
           </View>
@@ -187,12 +187,12 @@ export default function GameScreen() {
             </View>
             
             <View style={styles.highScoreBoxSmall}>
-              <Award size={16} color={Colors.accent} />
+              <Award size={16} color={AppColors.accent} />
               <Text style={styles.highScoreTextSmall}>Best: {highScore}</Text>
             </View>
 
             <Pressable style={styles.primaryButton} onPress={startGame}>
-              <RotateCcw size={20} color={Colors.surface} style={{ marginRight: 8 }} />
+              <RotateCcw size={20} color={AppColors.surface} style={{ marginRight: 8 }} />
               <Text style={styles.primaryButtonText}>Play Again</Text>
             </Pressable>
           </View>
@@ -209,7 +209,7 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: AppColors.background,
   },
   content: {
     flex: 1,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
   gameTitle: {
     ...Typography.h1,
     fontSize: 48,
-    color: Colors.primary,
+    color: AppColors.primary,
     marginBottom: Spacing.md,
     textShadowColor: 'rgba(0,0,0,0.1)',
     textShadowOffset: { width: 0, height: 4 },
@@ -234,16 +234,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: Spacing.xl,
     paddingHorizontal: Spacing.xl,
+    color: AppColors.textSecondary,
   },
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.surface,
+    backgroundColor: AppColors.surface,
     padding: Spacing.md,
     borderRadius: BorderRadius.lg,
     marginBottom: Spacing.xl,
-    shadowColor: Colors.shadow,
+    shadowColor: AppColors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -254,16 +255,16 @@ const styles = StyleSheet.create({
   },
   scoreLabel: {
     ...Typography.caption,
-    color: Colors.textSecondary,
+    color: AppColors.textSecondary,
   },
   scoreValue: {
     ...Typography.h2,
-    color: Colors.text,
+    color: AppColors.text,
   },
   timerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.cardBlue,
+    backgroundColor: AppColors.cardBlue,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
@@ -271,11 +272,11 @@ const styles = StyleSheet.create({
   },
   timerValue: {
     ...Typography.h2,
-    color: Colors.primary,
+    color: AppColors.primary,
   },
   iconButton: {
     padding: Spacing.sm,
-    backgroundColor: Colors.cardPurple,
+    backgroundColor: AppColors.cardPurple,
     borderRadius: BorderRadius.full,
   },
   iconSpacer: {
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
   tapText: {
     ...Typography.h1,
     fontSize: 42,
-    color: Colors.surface,
+    color: AppColors.surface,
     letterSpacing: 2,
     textShadowColor: 'rgba(0,0,0,0.2)',
     textShadowOffset: { width: 0, height: 2 },
@@ -321,22 +322,22 @@ const styles = StyleSheet.create({
   },
   pausedText: {
     ...Typography.h1,
-    color: Colors.text,
+    color: AppColors.text,
     letterSpacing: 4,
   },
   gameOverText: {
     ...Typography.h1,
     fontSize: 40,
-    color: Colors.error,
+    color: AppColors.error,
     marginBottom: Spacing.xl,
   },
   finalScoreBox: {
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: AppColors.surface,
     padding: Spacing.xl,
     borderRadius: BorderRadius.xl,
     width: '100%',
-    shadowColor: Colors.shadow,
+    shadowColor: AppColors.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
@@ -345,23 +346,23 @@ const styles = StyleSheet.create({
   },
   finalScoreLabel: {
     ...Typography.h2,
-    color: Colors.textSecondary,
+    color: AppColors.textSecondary,
     marginBottom: Spacing.sm,
   },
   finalScoreValue: {
     ...Typography.h1,
     fontSize: 64,
-    color: Colors.primary,
+    color: AppColors.primary,
   },
   primaryButton: {
     flexDirection: 'row',
-    backgroundColor: Colors.primary,
+    backgroundColor: AppColors.primary,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.lg,
     borderRadius: BorderRadius.full,
     alignItems: 'center',
     marginTop: Spacing.md,
-    shadowColor: Colors.primary,
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -369,14 +370,14 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     ...Typography.h2,
-    color: Colors.surface,
+    color: AppColors.surface,
   },
   highScoreBox: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: Spacing.xl,
     gap: Spacing.sm,
-    backgroundColor: Colors.cardYellow,
+    backgroundColor: AppColors.cardYellow,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     borderRadius: BorderRadius.full,
@@ -384,7 +385,7 @@ const styles = StyleSheet.create({
   highScoreText: {
     ...Typography.body,
     fontWeight: 'bold',
-    color: Colors.text,
+    color: AppColors.text,
   },
   highScoreBoxSmall: {
     flexDirection: 'row',
@@ -395,6 +396,6 @@ const styles = StyleSheet.create({
   highScoreTextSmall: {
     ...Typography.caption,
     fontWeight: 'bold',
-    color: Colors.textSecondary,
+    color: AppColors.textSecondary,
   },
 });
