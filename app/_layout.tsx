@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppColors } from '@/constants/theme';
+import mobileAds from 'react-native-google-mobile-ads';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -20,6 +21,16 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Initialize Mobile Ads
+    mobileAds()
+      .initialize()
+      .then(adapterStatuses => {
+        console.log('Mobile Ads SDK initialized');
+      })
+      .catch(error => {
+        console.error('Mobile Ads SDK initialization error: ', error);
+      });
+
     if (loaded) {
       SplashScreen.hideAsync();
     }
