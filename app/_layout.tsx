@@ -9,7 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { AppColors } from '@/constants/theme';
-import mobileAds from 'react-native-google-mobile-ads';
+import mobileAds, { MaxAdContentRating } from 'react-native-google-mobile-ads';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -21,11 +21,21 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    // Configure global ad request settings for content rating consistency
+    mobileAds().setRequestConfiguration({
+      // Set the max ad content rating to 'G' for general audience
+      maxAdContentRating: MaxAdContentRating.G,
+      // Tag for child-directed treatment if your app is for children
+      tagForChildDirectedTreatment: true,
+      // Tag for under age of consent in the EEA
+      tagForUnderAgeOfConsent: true,
+    });
+
     // Initialize Mobile Ads
     mobileAds()
       .initialize()
       .then(adapterStatuses => {
-        console.log('Mobile Ads SDK initialized');
+        console.log(`Mobile Ads SDK initialized with content rating: ${MaxAdContentRating.G}`);
       })
       .catch(error => {
         console.error('Mobile Ads SDK initialization error: ', error);

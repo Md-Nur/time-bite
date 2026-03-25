@@ -43,6 +43,7 @@ export default function PuzzleScreen() {
   const [score, setScore] = useState(0);
   const [isCompletedToday, setIsCompletedToday] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [puzzlesSolved, setPuzzlesSolved] = useState(0);
 
   useEffect(() => {
     loadUserData();
@@ -135,8 +136,11 @@ export default function PuzzleScreen() {
     setScore(newScore);
     saveData(newStreak, newScore, markCompleted);
 
-    // Show Interstitial Ad
-    if (interstitialLoaded) {
+    // Show Interstitial Ad every 4 solves
+    const newSolved = puzzlesSolved + 1;
+    setPuzzlesSolved(newSolved);
+    
+    if (newSolved % 4 === 0 && interstitialLoaded) {
       setTimeout(() => {
         showInterstitial();
       }, 600);

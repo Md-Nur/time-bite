@@ -29,7 +29,7 @@ export default ({ config }) => {
       },
       predictiveBackGestureEnabled: false,
       package: "com.nur_manik.timebite",
-      versionCode: 3
+      versionCode: 4
     },
     web: {
       bundler: "metro",

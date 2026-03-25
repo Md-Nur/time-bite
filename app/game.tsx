@@ -60,8 +60,8 @@ export default function GameScreen() {
     const newRounds = roundsPlayed + 1;
     setRoundsPlayed(newRounds);
     
-    // Interstitial Ad Trigger every 3 rounds
-    if (newRounds % 3 === 0 && interstitialLoaded) {
+    // Interstitial Ad Trigger every 5 rounds
+    if (newRounds % 5 === 0 && interstitialLoaded) {
       setTimeout(() => {
         showInterstitial();
       }, 500); // Small delay to let result screen render

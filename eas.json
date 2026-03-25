@@ -5,6 +5,9 @@
   },
   "build": {
     "development": {
+      "env": {
+        "NODE_ENV": "development"
+      },
       "developmentClient": true,
       "distribution": "internal",
       "android": {
@@ -15,9 +18,15 @@
       }
     },
     "preview": {
+      "env": {
+        "NODE_ENV": "production"
+      },
       "distribution": "internal"
     },
     "production": {
+      "env": {
+        "NODE_ENV": "production"
+      },
       "autoIncrement": true
     }
   },
